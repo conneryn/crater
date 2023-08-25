@@ -37,17 +37,19 @@ RUN mkdir -p /home/$user/.composer && \
     chown -R $user:$user /home/$user /var/www/ && \
     chmod -R 775 /var/www/
 
+# Setup basic uploads configuration
+COPY docker-compose/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
 # Set working directory
 WORKDIR /var/www
 
 # Copy the rest of the project files
-COPY . .
-
-# Setup basic uploads configuration
-COPY docker-compose/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+COPY --chown=0:$user . .
 
 # Setup install composer dependencies
 RUN composer install -q --no-interaction --prefer-dist --optimize-autoloader
+
+# Ensure crater can write to storage/cache folders
 RUN chmod 775 storage/framework/ storage/logs/ bootstrap/cache/
 
 # Initiate empty .env
@@ -59,4 +61,5 @@ COPY --chmod=0755 docker-compose/entrypoint.sh /usr/local/
 CMD ["php-fpm"]
 ENTRYPOINT ["/usr/local/entrypoint.sh"]
 
+# Set user for all application files
 USER $user
