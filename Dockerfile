@@ -39,7 +39,21 @@ RUN mkdir -p /home/$user/.composer && \
 
 # Set working directory
 WORKDIR /var/www
-RUN echo "${CRATER_DOCKER_TAG}" > /crater.docker.tag
+
+# Copy the rest of the project files
+COPY . .
+
+# Setup basic uploads configuration
+COPY docker-compose/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
+
+# Setup install composer dependencies
+RUN composer install -q --no-interaction --prefer-dist --optimize-autoloader
+RUN chmod 775 storage/framework/ storage/logs/ bootstrap/cache/
+
+# Initiate empty .env
+RUN touch .env
+
+# Setup entry point
 COPY --chmod=0755 docker-compose/entrypoint.sh /usr/local/
 
 CMD ["php-fpm"]
