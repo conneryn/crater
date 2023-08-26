@@ -52,14 +52,14 @@ COPY --chown=$user:$user . .
 # Set user for all application files
 USER $user
 
-# Setup install composer dependencies
-RUN composer install -q --no-interaction --prefer-dist --optimize-autoloader
-
-# Optimizing Configuration/Route/Views
-RUN php artisan optimize
-
 # Initiate empty .env
 RUN touch .env
+
+# Setup install composer dependencies
+RUN composer -q install
+
+# Optimizing Configuration/Route/Views
+# RUN php artisan optimize
 
 CMD ["php-fpm"]
 ENTRYPOINT ["/usr/local/entrypoint.sh"]
