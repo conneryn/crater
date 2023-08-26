@@ -40,23 +40,26 @@ RUN mkdir -p /home/$user/.composer && \
 # Setup basic uploads configuration
 COPY docker-compose/php/uploads.ini /usr/local/etc/php/conf.d/uploads.ini
 
+# Setup entry point
+COPY --chmod=0755 docker-compose/entrypoint.sh /usr/local/
+
 # Set working directory
 WORKDIR /var/www
 
 # Copy the rest of the project files
-COPY --chown=0:$user . .
+COPY --chown=$user:$user . .
+
+# Set user for all application files
+USER $user
 
 # Setup install composer dependencies
 RUN composer install -q --no-interaction --prefer-dist --optimize-autoloader
 
-# Ensure crater can write to storage/cache folders
-RUN chmod 775 storage/framework/ storage/logs/ bootstrap/cache/
+# Optimizing Configuration/Route/Views
+RUN php artisan optimize
 
 # Initiate empty .env
 RUN touch .env
-
-# Setup entry point
-COPY --chmod=0755 docker-compose/entrypoint.sh /usr/local/
 
 CMD ["php-fpm"]
 ENTRYPOINT ["/usr/local/entrypoint.sh"]
